@@ -1,4 +1,4 @@
-name: Deploy static content to Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install
+        run: npm install   # Regular install - works without perfect lockfile
 
       - name: Build
         run: npm run build
