@@ -40,7 +40,6 @@ export function createInitialGameState({
 
   placeStartingUnits(state, rng);
 
-  // Calculate initial max orders
   updateMaxOrders(state);
 
   return state;
