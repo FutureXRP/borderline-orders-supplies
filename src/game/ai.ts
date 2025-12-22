@@ -1,6 +1,5 @@
-import { GameState, Player, Action, Position } from './types';
+import { GameState, Position } from './types';
 import { SeededRNG } from './rng';
-import { UNIT_STATS } from './constants';
 
 function getUnitByPlayer(state: GameState, playerIndex: number) {
   return state.units.filter(u => u.player === playerIndex);
@@ -24,7 +23,6 @@ function findNearestCity(state: GameState, unitPos: Position, playerIndex: numbe
 }
 
 function findPathTo(state: GameState, from: Position, to: Position): Position | null {
-  // Very simple greedy path - just move closer
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   if (Math.abs(dx) > Math.abs(dy)) {
@@ -34,19 +32,18 @@ function findPathTo(state: GameState, from: Position, to: Position): Position | 
   }
 }
 
-export function runAIPlanning(state: GameState, playerIndex: number) {
-  const rng = new SeededRNG(state.seed + state.currentRound * 1337 + playerIndex);
-  const player = state.players[playerIndex];
+export function runAIPlanning(state: GameState, _playerIndex: number) {
+  const rng = new SeededRNG(state.seed + state.currentRound * 1337 + _playerIndex);
+  const player = state.players[_playerIndex];
   if (!player.isAI) return;
 
-  const myUnits = getUnitByPlayer(state, playerIndex);
+  const myUnits = getUnitByPlayer(state, _playerIndex);
   let ordersLeft = player.maxOrders;
 
   myUnits.forEach(unit => {
     if (ordersLeft <= 0) return;
 
-    // Prioritize capturing cities
-    const nearestCity = findNearestCity(state, unit.position, playerIndex);
+    const nearestCity = findNearestCity(state, unit.position, _playerIndex);
     if (nearestCity) {
       const nextStep = findPathTo(state, unit.position, nearestCity);
       if (nextStep) {
@@ -59,10 +56,7 @@ export function runAIPlanning(state: GameState, playerIndex: number) {
       }
     }
 
-    // If low supply, try to move toward own supply
     if (unit.currentSupply < 3) {
-      // find nearest own depot/city
-      // simplified: just stay or fortify
       player.queuedActions.push({
         type: 'fortify',
         unitId: unit.id,
@@ -70,9 +64,8 @@ export function runAIPlanning(state: GameState, playerIndex: number) {
       ordersLeft--;
     }
 
-    // Occasionally attack if favorable
     if (ordersLeft > 0 && rng.next() < 0.4) {
-      const enemies = state.units.filter(u => u.player !== playerIndex);
+      const enemies = state.units.filter(u => u.player !== _playerIndex);
       const closeEnemy = enemies.find(
         u => Math.abs(u.position.x - unit.position.x) + Math.abs(u.position.y - unit.position.y) <= 2
       );
